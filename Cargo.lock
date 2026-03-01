@@ -364,6 +364,7 @@ dependencies = [
  "hyper",
  "hyper-rustls",
  "tokio",
+ "yup-oauth2",
 ]
 
 [[package]]

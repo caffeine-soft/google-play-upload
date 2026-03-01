@@ -1,7 +1,8 @@
 use anyhow::{Context, Result};
-use google_androidpublisher3::{AndroidPublisher, api, hyper_rustls, hyper_util, oauth2};
+use google_androidpublisher3::{AndroidPublisher, api, hyper_rustls, hyper_util};
 use std::env;
 use std::fs;
+use yup_oauth2 as oauth2;
 
 #[tokio::main]
 async fn main() -> Result<()> {
