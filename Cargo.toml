@@ -8,3 +8,8 @@ name = "gp-upload-action"
 path = "src/main.rs"
 
 [dependencies]
+anyhow = "1.0.102"
+google-androidpublisher3 = "7.0.0"
+hyper = "1.8.1"
+hyper-rustls = "0.27.7"
+tokio = { version = "1.49.0", features = ["full"] }

@@ -1,19 +1,48 @@
-name: "Google Play Upload"
-description: "Upload an Android App Bundle or APK to the Google Play Store"
-author: "Your Name"
-
-# Define inputs your action needs here
+name: "Native Rust Play Store Upload"
+description: "Upload to Google Play without Docker or Node.js"
 inputs:
-  package_name:
-    description: "The package name of the app (e.g., com.example.app)"
+  packageName:
     required: true
+    description: "Android package name"
+  track:
+    required: true
+    description: "Release track (e.g. production, internal)"
+  status:
+    required: false
+    default: "completed"
+    description: "Release status (e.g. completed, draft, inProgress)"
+  releaseFile:
+    required: true
+    description: "Path to .aab or .apk"
+  serviceAccountJsonPlainText:
+    required: true
+    description: "GCP Service Account JSON"
 
 runs:
-  # Since this is a Rust project, you might want to use a Dockerfile
-  using: "docker"
-  image: "Dockerfile"
-  # Or if you are compiling it and running it as a composite action:
-  # using: 'composite'
-  # steps:
-  #   - run: cargo run --release
-  #     shell: bash
+  using: "composite"
+  steps:
+    - name: Download Binary
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        TARGET_TAG="${{ github.action_ref }}"
+        if [[ -z "$TARGET_TAG" || "$TARGET_TAG" == "main" ]]; then
+          echo "Downloading latest release..."
+          gh release download --repo ${{ github.action_repository }} --pattern "gp-upload-action"
+        else
+          echo "Downloading release for tag $TARGET_TAG..."
+          # gh CLI автоматически разрешает теги, включая мажорные
+          gh release download "$TARGET_TAG" --repo ${{ github.action_repository }} --pattern "gp-upload-action"
+        fi
+        chmod +x gp-upload-action
+
+    - name: Execute Action
+      shell: bash
+      env:
+        INPUT_PACKAGENAME: ${{ inputs.packageName }}
+        INPUT_TRACK: ${{ inputs.track }}
+        INPUT_STATUS: ${{ inputs.status }}
+        INPUT_RELEASEFILE: ${{ inputs.releaseFile }}
+        INPUT_SERVICEACCOUNTJSONPLAINTEXT: ${{ inputs.serviceAccountJsonPlainText }}
+      run: ./gp-upload-action
