@@ -1,0 +1,19 @@
+name: "Google Play Upload"
+description: "Upload an Android App Bundle or APK to the Google Play Store"
+author: "Your Name"
+
+# Define inputs your action needs here
+inputs:
+  package_name:
+    description: "The package name of the app (e.g., com.example.app)"
+    required: true
+
+runs:
+  # Since this is a Rust project, you might want to use a Dockerfile
+  using: "docker"
+  image: "Dockerfile"
+  # Or if you are compiling it and running it as a composite action:
+  # using: 'composite'
+  # steps:
+  #   - run: cargo run --release
+  #     shell: bash
