@@ -1,5 +1,10 @@
 name: "Native Rust Play Store Upload"
 description: "Upload to Google Play without Docker or Node.js"
+
+branding:
+  icon: "upload-cloud"
+  color: "green"
+
 inputs:
   packageName:
     required: true
