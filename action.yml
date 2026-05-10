@@ -38,16 +38,38 @@ runs:
         if [[ -z "$REPO" ]]; then
           REPO="caffeine-soft/google-play-upload"
         fi
+
+        case "${{ runner.os }}" in
+          Linux)
+            ASSET_PATTERN="gp-upload-action-linux"
+            BINARY_NAME="gp-upload-action"
+            ;;
+          Windows)
+            ASSET_PATTERN="gp-upload-action-windows.exe"
+            BINARY_NAME="gp-upload-action.exe"
+            ;;
+          macOS)
+            ASSET_PATTERN="gp-upload-action-macos"
+            BINARY_NAME="gp-upload-action"
+            ;;
+          *)
+            echo "Unsupported OS: ${{ runner.os }}"
+            exit 1
+            ;;
+        esac
+
         TARGET_TAG="${{ github.action_ref }}"
         if [[ -z "$TARGET_TAG" || "$TARGET_TAG" == "main" ]]; then
           echo "Downloading latest release..."
-          gh release download --latest --repo "$REPO" --pattern "gp-upload-action"
+          gh release download --latest --repo "$REPO" --pattern "$ASSET_PATTERN"
         else
           echo "Downloading release for tag $TARGET_TAG..."
           # gh CLI автоматически разрешает теги, включая мажорные
-          gh release download "$TARGET_TAG" --repo "$REPO" --pattern "gp-upload-action"
+          gh release download "$TARGET_TAG" --repo "$REPO" --pattern "$ASSET_PATTERN"
         fi
-        chmod +x gp-upload-action
+        
+        mv "$ASSET_PATTERN" "$BINARY_NAME"
+        chmod +x "$BINARY_NAME"
 
     - name: Execute Action
       shell: bash
@@ -57,4 +79,9 @@ runs:
         INPUT_STATUS: ${{ inputs.status }}
         INPUT_RELEASEFILE: ${{ inputs.releaseFile || inputs.releaseFiles }}
         INPUT_SERVICEACCOUNTJSONPLAINTEXT: ${{ inputs.serviceAccountJsonPlainText }}
-      run: ./gp-upload-action
+      run: |
+        if [[ "${{ runner.os }}" == "Windows" ]]; then
+          ./gp-upload-action.exe
+        else
+          ./gp-upload-action
+        fi

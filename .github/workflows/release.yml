@@ -6,7 +6,53 @@ on:
       - main
 
 jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install musl-tools (Linux only)
+        if: matrix.os == 'ubuntu-latest'
+        run: sudo apt-get install -y musl-tools
+
+      - name: Build Binary (Windows/macOS)
+        if: matrix.os != 'ubuntu-latest'
+        run: cargo build --release
+
+      - name: Build Binary (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          rustup target add x86_64-unknown-linux-musl
+          cargo build --release --target x86_64-unknown-linux-musl
+
+      - name: Rename Artifact (Windows)
+        if: matrix.os == 'windows-latest'
+        shell: bash
+        run: cp target/release/gp-upload-action.exe gp-upload-action-windows.exe
+
+      - name: Rename Artifact (macOS)
+        if: matrix.os == 'macos-latest'
+        run: cp target/release/gp-upload-action gp-upload-action-macos
+
+      - name: Rename Artifact (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: cp target/x86_64-unknown-linux-musl/release/gp-upload-action gp-upload-action-linux
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.os }}-binary
+          path: gp-upload-action-*
+
   release:
+    needs: build
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -15,16 +61,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
         with:
-          targets: x86_64-unknown-linux-musl
-
-      - name: Install musl-tools
-        run: sudo apt-get install -y musl-tools
-
-      - name: Build Binary
-        run: cargo build --release --target x86_64-unknown-linux-musl
+          path: dist
+          merge-multiple: true
 
       - name: Create Release and Upload Assets
         id: release
@@ -33,7 +74,10 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           generate_release: "true"
           release_name: "Release {tag}"
-          artifacts: "target/x86_64-unknown-linux-musl/release/gp-upload-action"
+          artifacts: |
+            dist/gp-upload-action-linux
+            dist/gp-upload-action-windows.exe
+            dist/gp-upload-action-macos
 
       - name: Update Major Tag
         run: |
