@@ -17,8 +17,11 @@ inputs:
     default: "completed"
     description: "Release status (e.g. completed, draft, inProgress)"
   releaseFile:
-    required: true
+    required: false
     description: "Path to .aab or .apk"
+  releaseFiles:
+    required: false
+    description: "Path to .aab or .apk (alias for releaseFile)"
   serviceAccountJsonPlainText:
     required: true
     description: "GCP Service Account JSON"
@@ -31,14 +34,18 @@ runs:
       env:
         GH_TOKEN: ${{ github.token }}
       run: |
+        REPO="${{ github.action_repository }}"
+        if [[ -z "$REPO" ]]; then
+          REPO="caffeine-soft/google-play-upload"
+        fi
         TARGET_TAG="${{ github.action_ref }}"
         if [[ -z "$TARGET_TAG" || "$TARGET_TAG" == "main" ]]; then
           echo "Downloading latest release..."
-          gh release download --repo ${{ github.action_repository }} --pattern "gp-upload-action"
+          gh release download --latest --repo "$REPO" --pattern "gp-upload-action"
         else
           echo "Downloading release for tag $TARGET_TAG..."
           # gh CLI автоматически разрешает теги, включая мажорные
-          gh release download "$TARGET_TAG" --repo ${{ github.action_repository }} --pattern "gp-upload-action"
+          gh release download "$TARGET_TAG" --repo "$REPO" --pattern "gp-upload-action"
         fi
         chmod +x gp-upload-action
 
@@ -48,6 +55,6 @@ runs:
         INPUT_PACKAGENAME: ${{ inputs.packageName }}
         INPUT_TRACK: ${{ inputs.track }}
         INPUT_STATUS: ${{ inputs.status }}
-        INPUT_RELEASEFILE: ${{ inputs.releaseFile }}
+        INPUT_RELEASEFILE: ${{ inputs.releaseFile || inputs.releaseFiles }}
         INPUT_SERVICEACCOUNTJSONPLAINTEXT: ${{ inputs.serviceAccountJsonPlainText }}
       run: ./gp-upload-action
