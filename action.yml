@@ -39,21 +39,29 @@ runs:
           REPO="caffeine-soft/google-play-upload"
         fi
 
-        case "${{ runner.os }}" in
-          Linux)
-            ASSET_PATTERN="gp-upload-action-linux"
+        case "${{ runner.os }}-${{ runner.arch }}" in
+          Linux-X64)
+            ASSET_PATTERN="gp-upload-action-linux-x64"
             BINARY_NAME="gp-upload-action"
             ;;
-          Windows)
-            ASSET_PATTERN="gp-upload-action-windows.exe"
+          Linux-ARM64)
+            ASSET_PATTERN="gp-upload-action-linux-arm64"
+            BINARY_NAME="gp-upload-action"
+            ;;
+          Windows-X64)
+            ASSET_PATTERN="gp-upload-action-windows-x64.exe"
             BINARY_NAME="gp-upload-action.exe"
             ;;
-          macOS)
-            ASSET_PATTERN="gp-upload-action-macos"
+          macOS-X64)
+            ASSET_PATTERN="gp-upload-action-macos-x64"
+            BINARY_NAME="gp-upload-action"
+            ;;
+          macOS-ARM64)
+            ASSET_PATTERN="gp-upload-action-macos-arm64"
             BINARY_NAME="gp-upload-action"
             ;;
           *)
-            echo "Unsupported OS: ${{ runner.os }}"
+            echo "Unsupported OS/Arch: ${{ runner.os }}-${{ runner.arch }}"
             exit 1
             ;;
         esac
