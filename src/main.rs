@@ -68,7 +68,20 @@ async fn main() -> Result<()> {
         .await?;
 
     // Commit
-    hub.edits().commit(&package_name, &edit_id).doit().await?;
+    let changes_not_sent_for_review = env::var("INPUT_CHANGESNOTSENTFORREVIEW")
+        .unwrap_or_else(|_| "false".to_string())
+        .to_lowercase() == "true";
+
+    let commit_req = hub.edits().commit(&package_name, &edit_id);
+    let commit_res = commit_req
+        .changes_not_sent_for_review(changes_not_sent_for_review)
+        .doit()
+        .await;
+    
+    if let Err(e) = commit_res {
+        eprintln!("Commit failed: {}", e);
+        return Err(e.into());
+    }
 
     println!(
         "Successfully committed release with version {}",

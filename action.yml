@@ -22,6 +22,10 @@ inputs:
   releaseFiles:
     required: false
     description: "Path to .aab or .apk (alias for releaseFile)"
+  changesNotSentForReview:
+    required: false
+    default: "false"
+    description: "If true, changes are not automatically sent for review (useful if your app has outstanding violations)"
   serviceAccountJsonPlainText:
     required: true
     description: "GCP Service Account JSON"
@@ -99,6 +103,7 @@ runs:
         INPUT_TRACK: ${{ inputs.track }}
         INPUT_STATUS: ${{ inputs.status }}
         INPUT_RELEASEFILE: ${{ inputs.releaseFile || inputs.releaseFiles }}
+        INPUT_CHANGESNOTSENTFORREVIEW: ${{ inputs.changesNotSentForReview }}
         INPUT_SERVICEACCOUNTJSONPLAINTEXT: ${{ inputs.serviceAccountJsonPlainText }}
       run: |
         if [[ "${{ runner.os }}" == "Windows" ]]; then
