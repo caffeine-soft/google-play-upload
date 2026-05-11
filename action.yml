@@ -74,9 +74,9 @@ runs:
         TARGET_TAG="${{ github.action_ref }}"
         if [[ -z "$TARGET_TAG" || "$TARGET_TAG" == "main" ]]; then
           echo "Downloading latest release..."
-          if ! gh release download --latest --repo "$REPO" --pattern "$ASSET_PATTERN"; then
+          if ! gh release download --repo "$REPO" --pattern "$ASSET_PATTERN"; then
             echo "Primary asset not found, trying fallback..."
-            gh release download --latest --repo "$REPO" --pattern "$FALLBACK_PATTERN"
+            gh release download --repo "$REPO" --pattern "$FALLBACK_PATTERN"
             mv "$FALLBACK_PATTERN" "$ASSET_PATTERN"
           fi
         else
