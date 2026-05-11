@@ -6,6 +6,8 @@ use yup_oauth2 as oauth2;
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    rustls::crypto::ring::default_provider().install_default().ok();
+
     //  INPUTS
     let package_name = env::var("INPUT_PACKAGENAME")?;
     let track = env::var("INPUT_TRACK")?;

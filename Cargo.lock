@@ -363,6 +363,7 @@ dependencies = [
  "google-androidpublisher3",
  "hyper",
  "hyper-rustls",
+ "rustls",
  "tokio",
  "yup-oauth2",
 ]
