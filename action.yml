@@ -42,22 +42,27 @@ runs:
         case "${{ runner.os }}-${{ runner.arch }}" in
           Linux-X64)
             ASSET_PATTERN="gp-upload-action-linux-x64"
+            FALLBACK_PATTERN="gp-upload-action-linux"
             BINARY_NAME="gp-upload-action"
             ;;
           Linux-ARM64)
             ASSET_PATTERN="gp-upload-action-linux-arm64"
+            FALLBACK_PATTERN="gp-upload-action-linux"
             BINARY_NAME="gp-upload-action"
             ;;
           Windows-X64)
             ASSET_PATTERN="gp-upload-action-windows-x64.exe"
+            FALLBACK_PATTERN="gp-upload-action-windows.exe"
             BINARY_NAME="gp-upload-action.exe"
             ;;
           macOS-X64)
             ASSET_PATTERN="gp-upload-action-macos-x64"
+            FALLBACK_PATTERN="gp-upload-action-macos"
             BINARY_NAME="gp-upload-action"
             ;;
           macOS-ARM64)
             ASSET_PATTERN="gp-upload-action-macos-arm64"
+            FALLBACK_PATTERN="gp-upload-action-macos"
             BINARY_NAME="gp-upload-action"
             ;;
           *)
@@ -69,11 +74,19 @@ runs:
         TARGET_TAG="${{ github.action_ref }}"
         if [[ -z "$TARGET_TAG" || "$TARGET_TAG" == "main" ]]; then
           echo "Downloading latest release..."
-          gh release download --latest --repo "$REPO" --pattern "$ASSET_PATTERN"
+          if ! gh release download --latest --repo "$REPO" --pattern "$ASSET_PATTERN"; then
+            echo "Primary asset not found, trying fallback..."
+            gh release download --latest --repo "$REPO" --pattern "$FALLBACK_PATTERN"
+            mv "$FALLBACK_PATTERN" "$ASSET_PATTERN"
+          fi
         else
           echo "Downloading release for tag $TARGET_TAG..."
           # gh CLI автоматически разрешает теги, включая мажорные
-          gh release download "$TARGET_TAG" --repo "$REPO" --pattern "$ASSET_PATTERN"
+          if ! gh release download "$TARGET_TAG" --repo "$REPO" --pattern "$ASSET_PATTERN"; then
+            echo "Primary asset not found, trying fallback..."
+            gh release download "$TARGET_TAG" --repo "$REPO" --pattern "$FALLBACK_PATTERN"
+            mv "$FALLBACK_PATTERN" "$ASSET_PATTERN"
+          fi
         fi
         
         mv "$ASSET_PATTERN" "$BINARY_NAME"
